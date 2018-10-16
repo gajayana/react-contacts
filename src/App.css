@@ -1,4 +1,35 @@
 .App {
+  border: solid 1px #ccc;
+  border-radius: 3px;
+  width: 96%;
+  max-width: 512px;
+  margin: 16px auto;
+  padding: 8px;
+}
+
+.App--profile-box {
+  padding: 8px;
+}
+
+/* .App--profile-box:last-child {
+  margin-bottom: 0;
+} */
+
+.App--profile-image {
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  padding-bottom: 100%;
+  width: 100%;
+}
+
+.App--profiles {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+/* .App {
   text-align: center;
 }
 
@@ -29,4 +60,4 @@
   to {
     transform: rotate(360deg);
   }
-}
+} */
