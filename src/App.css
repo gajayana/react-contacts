@@ -7,13 +7,10 @@
   padding: 8px;
 }
 
-.App--profile-box {
-  padding: 8px;
+.App--form-label {
+  display: block;
+  font-size: 0.875rem;
 }
-
-/* .App--profile-box:last-child {
-  margin-bottom: 0;
-} */
 
 .App--profile-image {
   background-position: center center;
