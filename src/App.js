@@ -24,7 +24,7 @@ class Contact extends Component {
           <div><small>{this.props.item.age} years of age</small></div>
         </div>
         <div>
-          <button type="button">Update</button>
+          <button onClick={this.props.toggle_update.bind(this, this.props.item)} type="button">Update</button>
           <button onClick={this.props.remove.bind(this, this.props.item)} type="button">Remove</button>
         </div>
       </div>
@@ -37,6 +37,7 @@ class Form extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      id: '',
       first_name: '',
       last_name: '',
       age: 1,
@@ -108,6 +109,18 @@ class Form extends Component {
       </div>
     );
   }
+
+  componentDidMount() {
+    if (!this.props.item) return;
+
+    this.setState({
+      id: this.props.item.id,
+      first_name: this.props.item.firstName,
+      last_name: this.props.item.lastName,
+      age: this.props.item.age,
+      photo: this.props.item.photo,
+    })
+  }
 }
 
 class App extends Component {
@@ -118,6 +131,8 @@ class App extends Component {
       is_loading: true,
       is_saving: false,
       show_create_form: false,
+      show_update_form: false,
+      update_form_item: null,
       // 2018-10-16
       // No 'Access-Control-Allow-Origin' header is present in any request, hence the use of cors-available.herokuapp.com.
       url: 'https://cors-available.herokuapp.com/https://simple-contact-crud.herokuapp.com',
@@ -125,6 +140,7 @@ class App extends Component {
 
     this.handleRemove = this.handleRemove.bind(this);
     this.toggleForm = this.toggleForm.bind(this);
+    this.toggleUpdateForm = this.toggleUpdateForm.bind(this);
     this.handleSave = this.handleSave.bind(this);
     this.handleUpdate = this.handleUpdate.bind(this);
   }
@@ -186,13 +202,48 @@ class App extends Component {
 
   }
 
-  handleUpdate() {
-    
+  handleUpdate(data) {
+    fetch(this.state.url + '/contact/' + data.id,{
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+        },
+        body: JSON.stringify({
+          firstName: data.first_name,
+          lastName: data.last_name,
+          age: data.age,
+          photo: data.photo,
+        })
+      })
+      .then(res => res.json())
+      .then((result) => {
+        let items = this.state.contacts;
+        let index = items.findIndex(ob => ob.id === data.id);
+
+        items[index].firstName = data.first_name;
+        items[index].lastName = data.last_name;
+        items[index].age = data.age;
+        items[index].photo = data.photo;
+
+        this.setState({
+          contacts: items,
+          show_update_form: false,
+          update_form_item: null
+        })
+      })
+      .catch(error => console.log(error));
   }
 
   toggleForm() {
     this.setState({
       show_create_form: !this.state.show_create_form
+    })
+  }
+
+  toggleUpdateForm(item) {
+    this.setState({
+      show_update_form: !this.state.show_update_form,
+      update_form_item: item,
     })
   }
 
@@ -203,7 +254,7 @@ class App extends Component {
       items = (<p>Loading contacts...</p>)
     } else {
       items = this.state.contacts.map((item) => {
-        return (<Contact item={item} key={item.id} remove={this.handleRemove} />);
+        return (<Contact item={item} key={item.id} remove={this.handleRemove} toggle_update={this.toggleUpdateForm} />);
       });
     }
 
@@ -212,6 +263,7 @@ class App extends Component {
         <div className="App--profiles">{ items }</div>
         <div className="bt-1 pa-1">
           { this.state.show_create_form ? <Form toggle={this.toggleForm} form_title="Add New Contact" handler={this.handleSave} is_processing={this.state.is_saving} /> : null }
+          { this.state.show_update_form ? <Form toggle={this.toggleUpdateForm} form_title="Update A Contact" handler={this.handleUpdate} is_processing={this.state.is_updating} item={this.state.update_form_item} /> : null }
           { !this.state.show_create_form ? <button onClick={this.toggleForm} type="button">Create</button> : null }
         </div>
       </div>
