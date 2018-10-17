@@ -32,13 +32,12 @@ class Contact extends Component {
   }
 }
 
-class CreateForm extends Component {
+class Form extends Component {
 
   constructor(props) {
     super(props);
     this.state = {
       first_name: '',
-      is_saving: false,
       last_name: '',
       age: 1,
       photo: '',
@@ -46,7 +45,6 @@ class CreateForm extends Component {
     
     this.disableButton = this.disableButton.bind(this);
     this.handleChange = this.handleChange.bind(this);
-    this.handleSave = this.handleSave.bind(this);
   }
 
   disableButton() {
@@ -54,7 +52,7 @@ class CreateForm extends Component {
     if (!this.state.first_name || this.state.first_name.length < 3) res = true;
     if (!this.state.last_name || this.state.last_name.length < 3) res = true;
     if (this.state.photo.indexOf('https://') !== 0) res = true;
-    // console.log(this.state.photo.indexOf('https://') !== 0);
+    if (this.props.is_processing) res = true;
     return res;
   }
 
@@ -73,75 +71,41 @@ class CreateForm extends Component {
     });
   }
 
-  handleSave() {
-    let data = {
-      firstName: this.state.first_name,
-      lastName: this.state.last_name,
-      age: this.state.age,
-      photo: this.state.photo
-    };
-    
-    this.setState({is_saving: true});
-
-    fetch(this.props.url + '/contact', {
-        method: 'POST',
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-        },
-        body: JSON.stringify(data)
-      })
-      .then(res => res.json())
-      .then((result) => {
-        console.log(result);
-        this.reset();
-        this.props.updateContacts();
-      })
-      .catch(error => console.log(error));
-  }
-
-  reset() {
-    this.setState({
-      first_name: '',
-      is_saving: false,
-      last_name: '',
-      age: 1,
-      photo: '',
-    });
-  }
-
   render() {
     const ages = [...Array(200)].map((v, i) => i + 1);
 
     return (
-      <form className="App--form">
-        <div className="mb-1">
-          <label className="App--form-label">First Name</label>
-          <input className="App--form-input" disabled={this.state.is_saving} maxLength="25" name="first_name" type="text" value={ this.state.first_name } onChange={ this.handleChange }></input>
-        </div>
-        <div className="mb-1">
-          <label className="App--form-label">Last Name</label>
-          <input className="App--form-input" disabled={this.state.is_saving} maxLength="25" name="last_name" type="text" value={ this.state.last_name } onChange={ this.handleChange }></input>
-        </div>
-        <div className="mb-1">
-          <label className="App--form-label">Photo URL</label>
-          <input className="App--form-input" disabled={this.state.is_saving} name="photo" type="text" value={ this.state.photo } onChange={ this.handleChange }></input>
-        </div>
-        <div className="mb-1">
-          <label className="App--form-label">Your Age</label>
-          {/* <input className="App--form-input" min="0" max="150" name="age" type="number" value={ this.state.age } onChange={ this.handleChange }></input> */}
-          <select className="App--form-input" disabled={this.state.is_saving} name="age" value={ this.state.age } onChange={ this.handleChange }>
-            { 
-              ages.map((num) => {
-                return (<option value={num} key={'age-' + num}>{num}</option>)
-              })
-            }
-          </select>
-        </div>
-        <div>
-          <button disabled={this.disableButton()} onClick={this.handleSave} type="button">Save</button>
-          <button disabled={this.state.is_saving} onClick={this.props.toggle} type="button">Cancel</button>
-        </div>
-      </form>
+      <div className="App--modal">
+        <form className="App--form pa-1">
+          <h1>{ this.props.form_title }</h1>
+          <div className="mb-1">
+            <label className="App--form-label">First Name</label>
+            <input className="App--form-input" disabled={this.props.is_processing} maxLength="25" name="first_name" type="text" value={ this.state.first_name } onChange={ this.handleChange }></input>
+          </div>
+          <div className="mb-1">
+            <label className="App--form-label">Last Name</label>
+            <input className="App--form-input" disabled={this.props.is_processing} maxLength="25" name="last_name" type="text" value={ this.state.last_name } onChange={ this.handleChange }></input>
+          </div>
+          <div className="mb-1">
+            <label className="App--form-label">Photo URL</label>
+            <input className="App--form-input" disabled={this.props.is_processing} name="photo" type="text" value={ this.state.photo } onChange={ this.handleChange }></input>
+          </div>
+          <div className="mb-1">
+            <label className="App--form-label">Your Age</label>
+            <select className="App--form-input" disabled={this.props.is_processing} name="age" value={ this.state.age } onChange={ this.handleChange }>
+              { 
+                ages.map((num) => {
+                  return (<option value={num} key={'age-' + num}>{num}</option>)
+                })
+              }
+            </select>
+          </div>
+          <div>
+            <button disabled={this.disableButton()} onClick={this.props.handler.bind(this, this.state)} type="button">Save</button>
+            <button disabled={this.props.is_processing} onClick={this.props.toggle} type="button">Cancel</button>
+          </div>
+        </form>
+      </div>
     );
   }
 }
@@ -152,15 +116,17 @@ class App extends Component {
     this.state = {
       contacts: [],
       is_loading: true,
+      is_saving: false,
       show_create_form: false,
       // 2018-10-16
-      // No 'Access-Control-Allow-Origin' header is present in ay request, hence the use of cors-available.herokuapp.com.
+      // No 'Access-Control-Allow-Origin' header is present in any request, hence the use of cors-available.herokuapp.com.
       url: 'https://cors-available.herokuapp.com/https://simple-contact-crud.herokuapp.com',
     }
 
     this.handleRemove = this.handleRemove.bind(this);
-    this.toggleCreateForm = this.toggleCreateForm.bind(this);
-    this.updateContacts = this.updateContacts.bind(this);
+    this.toggleForm = this.toggleForm.bind(this);
+    this.handleSave = this.handleSave.bind(this);
+    this.handleUpdate = this.handleUpdate.bind(this);
   }
 
   handleRemove(item) {
@@ -176,12 +142,58 @@ class App extends Component {
     fetch(this.state.url + '/contact/' + item.id, {
         method: 'DELETE',
         headers: {
-          "Content-Type": "application/json; charset=utf-8",
+          "Content-Type": "application/json",
         },
       })
       .then(res => res.json())
       .then(result => console.log(result))
       .catch(error => console.log(error));
+  }
+
+  handleSave(data) {
+    let args = {
+      firstName: data.first_name,
+      lastName: data.last_name,
+      age: data.age,
+      photo: data.photo
+    };
+    
+    this.setState({is_saving: true});
+    
+    fetch(this.state.url + '/contact', {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      body: JSON.stringify(args)
+    })
+    .then(res => res.json())
+    .then((result) => {
+      // fetch from sever to get new data
+      fetch(this.state.url + '/contact')
+        .then(res => res.json())
+        .then((result) => {
+
+          this.setState({
+            contacts: result.data,
+            is_saving: false,
+            show_create_form: false,
+          })
+        })
+        .catch(error => console.log(error))
+    })
+    .catch(error => console.log(error));
+
+  }
+
+  handleUpdate() {
+    
+  }
+
+  toggleForm() {
+    this.setState({
+      show_create_form: !this.state.show_create_form
+    })
   }
 
   render() {
@@ -199,8 +211,8 @@ class App extends Component {
       <div className="App">
         <div className="App--profiles">{ items }</div>
         <div className="bt-1 pa-1">
-          { this.state.show_create_form ? <CreateForm toggle={this.toggleCreateForm} url={this.state.url} /> : null }
-          { !this.state.show_create_form ? <button onClick={this.toggleCreateForm} type="button">Create</button> : null }
+          { this.state.show_create_form ? <Form toggle={this.toggleForm} form_title="Add New Contact" handler={this.handleSave} is_processing={this.state.is_saving} /> : null }
+          { !this.state.show_create_form ? <button onClick={this.toggleForm} type="button">Create</button> : null }
         </div>
       </div>
     );
@@ -216,16 +228,6 @@ class App extends Component {
         })
       })
       .catch(error => console.log(error))
-  }
-
-  toggleCreateForm() {
-    this.setState({
-      show_create_form: !this.state.show_create_form
-    })
-  }
-
-  updateContacts() {
-
   }
 }
 
