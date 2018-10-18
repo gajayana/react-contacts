@@ -133,9 +133,7 @@ class App extends Component {
       show_create_form: false,
       show_update_form: false,
       update_form_item: null,
-      // 2018-10-16
-      // No 'Access-Control-Allow-Origin' header is present in any request, hence the use of cors-available.herokuapp.com.
-      url: 'https://cors-available.herokuapp.com/https://simple-contact-crud.herokuapp.com',
+      url: 'https://simple-contact-crud.herokuapp.com',
     }
 
     this.handleRemove = this.handleRemove.bind(this);
