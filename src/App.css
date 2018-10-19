@@ -1,4 +1,50 @@
 .App {
+  border: solid 1px #ccc;
+  border-radius: 3px;
+  width: 96%;
+  max-width: 512px;
+  margin: 16px auto;
+  padding: 8px;
+}
+
+.App--form {
+  background-color: #fff;
+  position: absolute;
+  top:50%;
+  left:50%;
+  transform: translate(-50%, -50%);
+}
+
+.App--form-label {
+  display: block;
+  font-size: 0.875rem;
+}
+
+.App--modal {
+  background-color: rgba(0,0,0,0.2);
+  position: fixed;
+  height: 100vh;
+  width: 100vw;
+  top:0;
+  left:0;
+  z-index:99;
+}
+
+.App--profile-image {
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  padding-bottom: 100%;
+  width: 100%;
+}
+
+.App--profiles {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+/* .App {
   text-align: center;
 }
 
@@ -29,4 +75,4 @@
   to {
     transform: rotate(360deg);
   }
-}
+} */
